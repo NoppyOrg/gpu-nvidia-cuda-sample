@@ -1,0 +1,2 @@
+# gpu-nvidia-cuda-sample
+NVIDA製GPUを利用しCUDAプラットフォームを利用したGPUのサンプルグログラム
