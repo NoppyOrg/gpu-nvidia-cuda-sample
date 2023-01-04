@@ -1,7 +1,7 @@
 
 # AWSのGPU/ML系専用チップ インスタンス整理（詳細）
-## インスタンス概略(2023/1現在)
-| Class   | Instance Type   | GPU/Custom Chip     | CPU           | 料金(東京)     | Remark       |
+## GPU/ML専用チップ系のインスタンス概略(2023/1現在)(*1)
+| Class   | Instance Type   | GPU/Custom Chip     | CPU           | 料金(東京)(*2)  | Remark       |
 | ------- | --------------- | ------------------- | ------------- | ------------- | ------------ |
 | NVIDIA  | Amazon EC2 P3   | NVIDIA V100         | Intel Xeon    | 4.19〜42.8USD |              |
 |         | Amazon EC2 P4   | NVIDIA A100         | Intel Xeon    | 44.9USD       |              |
@@ -12,6 +12,9 @@
 | AWS     | Amazon EC2 Inf1 | AWS Inferentia      | Intel Xeon    | 0.31〜6.38USD | 推論専用チップ |
 |         | Amazon EC2 Inf2 | AWS Inferentia2     | Intel Xeon    | 未提供         | 推論専用チップ |
 |         | Amazon EC2 Trn1 | AWS Trainium        | Intel Xeon    | 未提供         |トレーニング専用|
+
+- (*1)インスタンスのスペックについては、[Amazon EC2のインスタンスタイプ説明のページ](https://aws.amazon.com/jp/ec2/instance-types/#Accelerated_Computing)を参照
+- (*2)インスタンスの価格は、東京リージョンのOS:Linuxの場合のオンデマンド料金(2023/1現在)になります。料金表記はスペースの関係で四捨五入し簡易表示しています。
 
 
 ## NVIDIA系 インスタンス詳細
