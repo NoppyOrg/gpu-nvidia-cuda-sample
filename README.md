@@ -60,16 +60,14 @@ sudo subscription-manager repos --enable=codeready-builder-for-rhel-9-x86_64-rpm
 ```
 
 ##### CUDAのインストール
-CUDAのダウンロードページで下記条件のインストール手順に従う
-- [OS:Linux, Architecture:x86_64 Distribution:RHEL Version9 Installer Type:rpm(local)](https://developer.nvidia.com/cuda-downloads?target_os=Linux&target_arch=x86_64&Distribution=RHEL&target_version=9&target_type=rpm_local)
+CUDAのダウンロードページで下記条件のインストール手順に従う。ここではrpmパッケージをネットワーク経由でインストールする方式としている。(なおrpm(local)やrunfile(local)の場合は、ディスク容量を30GB以上にしないとディスク容量不足になる)
+- [OS:Linux, Architecture:x86_64 Distribution:RHEL Version9 Installer Type:rpm(network)](https://developer.nvidia.com/cuda-downloads?target_os=Linux&target_arch=x86_64&Distribution=RHEL&target_version=9&target_type=rpm_network)
 
 
-なお2023/1現在の最新CUDAの場合は以下手順になる。
+なお2023/1現在の最新rpm(network)のCUDAセットアップ手順は以下になる。
 ```shell
-wget https://developer.download.nvidia.com/compute/cuda/12.0.0/local_installers/cuda-repo-rhel9-12-0-local-12.0.0_525.60.13-1.x86_64.rpm
-sudo rpm -ivh cuda-repo-rhel9-12-0-local-12.0.0_525.60.13-1.x86_64.rpm
+sudo dnf config-manager --add-repo https://developer.download.nvidia.com/compute/cuda/repos/rhel9/x86_64/cuda-rhel9.repo
 sudo dnf clean all
-
 sudo dnf -y module install nvidia-driver:latest-dkms
 sudo dnf -y install cuda
 ```
@@ -160,20 +158,75 @@ Result = PASS
 ```
 
 ## サンプルコード
-- ディレクトリを移動してmakeする
+### サンプルコードの動かし方
+CUDAの触りを理解するために、シンプルなサンプルプログラムを用意しています。
+- CUDAをセットアップした環境でコードをcloneする
 ```sh
+git clone https://github.com/NoppyOrg/gpu-nvidia-cuda-sample.git
+```
+- ディレクトリを移動する
+```sh
+cd gpu-nvidia-cuda-sample
 cd src
+```
+- ファイル説明
+    - `cuda_sample.cu` : CUDAを利用したプログラムのシンプルなサンプル
+    - `cpu_sample.c` :  上記処理を通常のCPUで処理したサンプル
+- makeする
+```sh
 make
 ```
 
-- GPUを利用しない場合
+- (実行) GPUを利用しない場合
 ```sh
 ./cpu_sample.out
 ```
-- GPUを利用した場合
+- (実行) GPUを利用した場合
 ```sh
 ./cuda_sample.out
 ```
+
+### サンプルコードの説明
+該当コードは[こちら](src/cuda_sample.cu)
+
+- 処理概要
+    - 要素数がそれぞれ6億個の4つの配列(arr1, arr2, arr3, sum_arrの)がある
+    - GPUで、６億個の要素それぞれに対して、`sum_arr = arr1 + arr2 + arr3`の計算を行う
+#### CUDAコードのポイント
+- (1)GPUのデバイス側メモリの確保: 下記でGPU処理で利用する、GPU側のメモリをmallocする
+    ```c
+        cudaMalloc((void **)&d_arr1, n_byte);
+        cudaMalloc((void **)&d_arr2, n_byte);
+        cudaMalloc((void **)&d_arr3, n_byte);
+        cudaMalloc((void **)&d_sum_arr, n_byte);
+    ```
+- (2)メインメモリ(ホスト)からデバイス(GPU側のメモリ)へのデータ転送:
+    ```c
+        cudaMemcpy(d_arr1, arr1, n_byte, cudaMemcpyHostToDevice);
+        cudaMemcpy(d_arr2, arr2, n_byte, cudaMemcpyHostToDevice);
+        cudaMemcpy(d_arr3, arr3, n_byte, cudaMemcpyHostToDevice);
+    ```
+- (3)GPUでの処理実行
+    ```c
+    sum_of_array<<<(N + 255ULL) / 256ULL, 256ULL>>>(d_arr1, d_arr2, d_arr3, d_sum_arr);
+    ```
+- (4)GPUでの処理結果をメインメモリ(ホスト)に戻す
+    ```c
+    cudaMemcpy(sum_arr, d_sum_arr, n_byte, cudaMemcpyDeviceToHost);
+    ```
+- GPU処理ロジック
+    - 通常のCPU処理ではfor文で回しているが、CUDAでは`sum_of_array<<<(N + 255ULL) / 256ULL, 256ULL>>>`の部分で処理をgridとtreadに分割して、パラレルで処理させているイメージになる。
+    - `blockIdx.x * blockDim.x + threadIdx.x`の部分で、gridとthread番号から、配列内のどの要素の処理かを計算している
+    ```c
+    __global__ void sum_of_array(float *arr1, float *arr2, float *arr3, float *sum_arr)
+    {
+
+        unsigned long long i = blockIdx.x * blockDim.x + threadIdx.x;
+        *(sum_arr + i) = *(arr1 + i) + *(arr2 + i) + *(arr3 + i);
+
+        return;
+    }
+    ```
 
 ## リファレンス
 - CUDAセットアップ
@@ -181,4 +234,6 @@ make
     - [CUDA Toolkit 12.0 Downloads](https://developer.nvidia.com/cuda-downloads?target_os=Linux)
     -  [EC2 G4インスタンスのAmazon Linux 2にNVIDIA CUDAをインストールしてみた](https://dev.classmethod.jp/articles/install-nvidia-cuda-on-ec2-g4-amazon-linux-2/)
 - CUDAプログラミング
-    - [CUDAを使ってGPUプログラミングに挑戦してみた。](https://nonbiri-tereka.hatenablog.com/entry/2017/04/11/081601)
+    - [NVIDIA CUDAプログラミングの基本 Part1 ソフトウェアスタックとメモリ管理](https://http.download.nvidia.com/developer/cuda/jp/CUDA_Programming_Basics_PartI_jp.pdf)
+    - [NVIDIA CUDAプログラミングの基本 Part2 カーネル](https://http.download.nvidia.com/developer/cuda/jp/CUDA_Programming_Basics_PartII_jp.pdf)
+    - [CUDAを使ってGPUプログラミングに挑戦してみた。](https://nonbiri-tereka.hatenablog.com/entry/2017/04/11/081601) (ただしリンク先のプログラムは正常に動かないので注意)
