@@ -160,11 +160,25 @@ Result = PASS
 ```
 
 ## サンプルコード
+- ディレクトリを移動してmakeする
+```sh
+cd src
+make
+```
 
-以下作成中
+- GPUを利用しない場合
+```sh
+./cpu_sample.out
+```
+- GPUを利用した場合
+```sh
+./cuda_sample.out
+```
 
 ## リファレンス
 - CUDAセットアップ
     - [NVIDIA CUDA Installation Guide for Linux](https://docs.nvidia.com/cuda/cuda-installation-guide-linux/index.html)
     - [CUDA Toolkit 12.0 Downloads](https://developer.nvidia.com/cuda-downloads?target_os=Linux)
     -  [EC2 G4インスタンスのAmazon Linux 2にNVIDIA CUDAをインストールしてみた](https://dev.classmethod.jp/articles/install-nvidia-cuda-on-ec2-g4-amazon-linux-2/)
+- CUDAプログラミング
+    - [CUDAを使ってGPUプログラミングに挑戦してみた。](https://nonbiri-tereka.hatenablog.com/entry/2017/04/11/081601)
