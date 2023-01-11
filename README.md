@@ -1,5 +1,5 @@
-# gpu-nvidia-cuda-sample
-NVIDA製GPUを利用しCUDAプラットフォームを利用したGPUのサンプルグログラム
+# gpu-nvidia-cuda-sample ハンズオン
+NVIDA製GPUを利用しCUDAプラットフォームのセットアップと、CUDAを利用したGPUのサンプルグログラムのハンズオン
 
 
 ## 説明
