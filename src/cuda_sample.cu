@@ -20,7 +20,7 @@ void initialize_array(float *arr)
 __global__ void sum_of_array(float *arr1, float *arr2, float *arr3, float *sum_arr)
 {
 
-    int i = blockIdx.x * blockDim.x + threadIdx.x;
+    unsigned long long i = blockIdx.x * blockDim.x + threadIdx.x;
     *(sum_arr + i) = *(arr1 + i) + *(arr2 + i) + *(arr3 + i);
 
     return;
@@ -52,25 +52,28 @@ int main(void)
 
     /* initialize GPU */
     printf("start cudaMalloc\n");
-    cudaMalloc((void **)&d_arr1, N);
-    cudaMalloc((void **)&d_arr2, N);
-    cudaMalloc((void **)&d_arr3, N);
-    cudaMalloc((void **)&d_sum_arr, N);
+    cudaMalloc((void **)&d_arr1, n_byte);
+    cudaMalloc((void **)&d_arr2, n_byte);
+    cudaMalloc((void **)&d_arr3, n_byte);
+    cudaMalloc((void **)&d_sum_arr, n_byte);
     printf("finish cudaMalloc\n");
 
     printf("start cudaMemcpy\n");
     cudaMemcpy(d_arr1, arr1, n_byte, cudaMemcpyHostToDevice);
     cudaMemcpy(d_arr2, arr2, n_byte, cudaMemcpyHostToDevice);
     cudaMemcpy(d_arr3, arr3, n_byte, cudaMemcpyHostToDevice);
-    cudaMemcpy(d_sum_arr, sum_arr, n_byte, cudaMemcpyHostToDevice);
     printf("finish cudaMemcpy\n");
 
     /* main */
     printf("start calculation process\n");
     clock_gettime(CLOCK_REALTIME, &ts);
-    sum_of_array<<<(N + 255) / 256, 256>>>(d_arr1, d_arr2, d_arr3, d_sum_arr);
+    sum_of_array<<<(N + 255ULL) / 256ULL, 256ULL>>>(d_arr1, d_arr2, d_arr3, d_sum_arr);
     clock_gettime(CLOCK_REALTIME, &te);
     printf("finish calculation process\n");
+
+    /* return result from device to the host */
+    printf("return result to the host\n");
+    cudaMemcpy(sum_arr, d_sum_arr, n_byte, cudaMemcpyDeviceToHost);
 
     /* result */
     print_elapsed(ts, te);
