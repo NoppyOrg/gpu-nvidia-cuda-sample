@@ -8,6 +8,7 @@
 void snprintf_time(char *buf, size_t size, struct tm tm, struct timespec ts);
 void print_elapsed(struct timespec ts, struct timespec te);
 
+/* 計算元データの生成 */
 void initialize_array(float *arr)
 {
     for (unsigned long long i = 0; i < N; i++)
@@ -17,6 +18,7 @@ void initialize_array(float *arr)
     return;
 }
 
+/* GPU処理にルーティン */
 __global__ void sum_of_array(float *arr1, float *arr2, float *arr3, float *sum_arr)
 {
 
